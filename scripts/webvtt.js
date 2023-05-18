@@ -5,8 +5,12 @@
 //		var deferred = new $.Deferred();
 //		var promise = deferred.promise();
 
-		// Normalize line ends to \n.
-		text = text.replace(/(\r\n|\n|\r)/g,'\n');
+		// Remove pre/post spaces.
+		text = text.replace(/^[^\S\r\n]+|[^\S\r\n]+$/g,'');
+		// Normalize EOL to \n.
+		text = text.replace(/\r\n|\r/g,'\n');
+		// Shrink needless \n.
+		text = text.replace(/(?<=\n{2})\n+/g,'');
 
 		var parserState = {
 			src: srcFile,
@@ -273,14 +277,8 @@
 		var languageStack = [];
 		while (state.text.length > 0) {
 			var nextLine = peekLine(state);
-			if (nextLine.indexOf('-->') !== -1 || /^\s+$/.test(nextLine)) {
+			if (!nextLine.lenght || nextLine.indexOf('-->') !== -1) {
 				break; // Handle empty cues
-			}
-			// Have to separately detect double-lines ending cue due to our non-standard parsing.
-			// TODO: Redo outer algorithm to conform to W3 spec?
-			if (state.text.length >= 2 && state.text[0] === '\n' && state.text[1] === '\n') {
-				cut(state, 2);
-				break;
 			}
 
 			var token = getCueToken(state);
